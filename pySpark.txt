@@ -1,0 +1,495 @@
+myrange = spark.range(10).toDF("number")
+
+print(myrange)
+DataFrame[number: bigint]
+ 
+myrange.show()
++------+
+|number|
++------+
+|     0|
+|     1|
+|     2|
+|     3|
+|     4|
+|     5|
+|     6|
+|     7|
+|     8|
+|     9|
++------+
+
+divBy2 = myrange.where("number % 2 == 0")
+
+dfFlight = spark.read.format("JSON").load('/home/futurense/Downloads/MongoDBFIles/flight-data/json/2015-summary.json')
+
+dfFlight.schema
+
+dfFlight.printSchema()
+
+spark.read.format("JSON").load('/home/futurense/Downloads/MongoDBFIles/flight-data/json/2015-summary.json').schema
+
+spark.read.format("JSON").load('/home/futurense/Downloads/MongoDBFIles/flight-data/json/2015-summary.json').columns
+
+spark.read.format("JSON").load('/home/futurense/Downloads/MongoDBFIles/flight-data/json/2015-summary.json').count()
+
+from pyspark.sql import Row
+
+from pyspark.sql.types import *
+
+myRow = Row("Hello","World",1,True)
+
+mySchema = StructType([StructField("Col1",StringType(), True), StructField("Col2",StringType(), True), StructField("Col3",LongType(), True), StructField("Col4",BooleanType(), True)])
+
+dfNew = spark.createDataFrame([myRow], mySchema)
+
+dfNew.show()
+
+dfFlight.select('count').show()
+
+dfFlight.select('count','dest_country_name').show()
+
+dfFlight[['count']].show()
+
+dfFlight[['count']]
+
+from pyspark.sql.functions import *                                     -Import functions
+
+dfFlight.select(expr('DEST_COUNTRY_NAME'),col('count'),column('ORIGIN_COUNTRY_NAME')).show(5)
+
+dfFlight.select(expr("ORIGIN_COUNTRY_NAME as dest")).show(5)
+
+dfFlight.selectExpr("ORIGIN_COUNTRY_NAME as dest").show(5)
+
+dfFlight.selectExpr("ORIGIN_COUNTRY_NAME as dest").alias("hello").show(5)
+
+dfFlight.select(expr("ORIGIN_COUNTRY_NAME as dest").alias("hello")).show(5)
+
+dfFlight.selectExpr("*").where("count = 370002").show()
+
+dfFlight.selectExpr("*", "(ORIGIN_COUNTRY_NAME = DEST_COUNTRY_NAME)  as withinCountry").show(5)
+
+dfFlight.selectExpr("*", "(ORIGIN_COUNTRY_NAME = DEST_COUNTRY_NAME)  as withinCountry").where("withinCountry = true").show(5)
+
+dfFlight.select(expr("ORIGIN_COUNTRY_NAME as dest"),lit(1)).show(5)
+
+dfFlight.select(expr("ORIGIN_COUNTRY_NAME as dest"),lit(1)).show(5)
+
+dfFlight.select(expr("ORIGIN_COUNTRY_NAME as dest"),lit(1).alias("one")).show(5)
+
+dd.select("*",expr("count * one")).show()
+
+dfFlight.select(expr("*"),lit(expr("7*count")).alias("one")).show(5)
+
+dfFlight.select(expr("*"),lit(expr("7*count")).alias("one")).where("count > 70000").show(5)
+
+dfFlight.withColumn("numberSeven", lit(7)).show(5)
+
+dfFlight.withColumn("withinCountry", expr("DEST_COUNTRY_NAME = ORIGIN_COUNTRY_NAME")).show(5)
+
+dfFlight.withColumnRenamed("DEST_COUNTRY_NAME","hello").show(5)
+
+dfFlight.withColumnRenamed("DEST_COUNTRY_NAME","hello").withColumnRenamed("ORIGIN_COUNTRY_NAME","brother").show(5)
+
+dfWithColumn = dfFlight.withColumn("within Country", expr("DEST_COUNTRY_NAME = ORIGIN_COUNTRY_NAME"))
+
+dfWithColumn.select("within Country").show()
+
+dfWithColumn.selectExpr("`within Country`").show()
+
+dfFlight.where("count > 10" and col("ORIGIN_COUNTRY_NAME") == "India").show()
+
+dfFlight.select("ORIGIN_COUNTRY_NAME").distinct().show()
+
+dfFlight.filter("count > 10" and col("ORIGIN_COUNTRY_NAME") == "India").show()
+
+dfFlight.where("count > 10").where(col("ORIGIN_COUNTRY_NAME") == "India").show(2)
+
+dfFlight.filter("count > 10").filter(col("ORIGIN_COUNTRY_NAME") == "India").show(2)
++-----------------+-------------------+-----+
+|DEST_COUNTRY_NAME|ORIGIN_COUNTRY_NAME|count|
++-----------------+-------------------+-----+
+|    United States|              India|   62|
++-----------------+-------------------+-----+
+
+dfFlight.filter("count > 10").where(col("ORIGIN_COUNTRY_NAME") == "India").show(2)
++-----------------+-------------------+-----+
+|DEST_COUNTRY_NAME|ORIGIN_COUNTRY_NAME|count|
++-----------------+-------------------+-----+
+|    United States|              India|   62|
++-----------------+-------------------+-----+
+
+dfFlight.where("count > 10").filter(col("ORIGIN_COUNTRY_NAME") == "India").show(2)
++-----------------+-------------------+-----+
+|DEST_COUNTRY_NAME|ORIGIN_COUNTRY_NAME|count|
++-----------------+-------------------+-----+
+|    United States|              India|   62|
++-----------------+-------------------+-----+
+
+dfWithColumn.drop("ORIGIN_COUNTRY_NAME","DEST_COUNTRY_NAME").show()
++-----+--------------+
+|count|within Country|
++-----+--------------+
+|   15|         false|
+|    1|         false|
+|  344|         false|
+|   15|         false|
+|   62|         false|
+|    1|         false|
+|   62|         false|
+|  588|         false|
+|   40|         false|
+|    1|         false|
+|  325|         false|
+|   39|         false|
+|   64|         false|
+|    1|         false|
+|   41|         false|
+|   30|         false|
+|    6|         false|
+|    4|         false|
+|  230|         false|
+|    1|         false|
++-----+--------------+
+only showing top 20 rows
+
+dfWithColumn.drop("ORIGIN_COUNTRY_NAME","DEST_COUNTRY_NAME","within Country").show()
++-----+
+|count|
++-----+
+|   15|
+|    1|
+|  344|
+|   15|
+|   62|
+|    1|
+|   62|
+|  588|
+|   40|
+|    1|
+|  325|
+|   39|
+|   64|
+|    1|
+|   41|
+|   30|
+|    6|
+|    4|
+|  230|
+|    1|
++-----+
+only showing top 20 rows
+
+dfWithColumn.drop("ORIGIN_COUNTRY_NAME","DEST_COUNTRY_NAME","within Country","count").show()
+
+seed = 5
+withReplacement = False
+fraction = 0.25
+
+dfFlight.sample(False,0.25,5).show(4)
+
+dfSample = dfFlight.randomSplit([0.25,0.75],seed)
+
+dfSample[0].count()
+71
+dfSample[1].count()
+185
+
+dfSample[0].sort("count").show()
+
+dfSample[0].orderBy("count").show()
+
+dfSample[0].sort(expr("count").asc()).show()
+
+dfSample[0].orderBy(expr("DEST_COUNTRY_NAME").asc()).show()
+
+dfSample[0].orderBy(col("count").desc()).show()
+
+from pyspark.sql import Row
+newRows = [Row("New Country","New Country 2", 5), Row("New Country 2","New Country",3)]
+
+parallisedRows = spark.sparkContext.parallelize(newRows)
+
+schema = dfFlight.schema
+
+newDf = spark.createDataFrame(parallisedRows, schema)
+
+dfFlight.union(newDf).where("count = 3").where(col("ORIGIN_COUNTRY_NAME") != 'United States').show()
++-----------------+-------------------+-----+
+|DEST_COUNTRY_NAME|ORIGIN_COUNTRY_NAME|count|
++-----------------+-------------------+-----+
+|    United States|           Malaysia|    3|
+|    United States|            Hungary|    3|
+|    New Country 2|        New Country|    3|
++-----------------+-------------------+-----+
+
+dfFlight.rdd.getNumPartitions()
+1
+
+dfPartition = dfFlight.repartition(5)
+dfPartition.rdd.getNumPartitions()
+5
+
+newDf.rdd.getNumPartitions()
+8
+
+dfPartition1 = dfFlight.repartition(2)
+dfCoalesce = dfFlight.coalesce(2)
+dfCoalesce.rdd.getNumPartitions()
+1
+#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+dfRetail = spark.read.format("csv").option("inferSchema", "True").option("header","True").load('/home/futurense/Downloads/MongoDBFIles/retail-data/by-day/*.csv')
+
+dfRetailPartition = spark.read.format("csv").option("inferSchema", "True").option("header","True").load('/home/futurense/Downloads/MongoDBFIles/retail-data/by-day/*.csv').repartition(15)
+
+dfRetailCoalesce = spark.read.format("csv").option("inferSchema", "True").option("header","True").load('/home/futurense/Downloads/MongoDBFIles/retail-data/by-day/*.csv').coalesce(5)
+
+dfRetail = spark.read.format("csv").option("inferSchema", "True").option("header","True").load('/home/futurense/Downloads/MongoDBFIles/retail-data/by-day/2011-12-09.csv')
+
+dfRetail.where(col("InvoiceNo") != 581475).select("InvoiceNo","Description").show(5, False) 
++---------+---------------------------------+
+|InvoiceNo|Description                      |
++---------+---------------------------------+
+|581476   |PANTRY MAGNETIC  SHOPPING LIST   |
+|581476   |SKETCHBOOK MAGNETIC SHOPPING LIST|
+|581476   |BULL DOG BOTTLE OPENER           |
+|581476   |CLASSIC CAFE SUGAR DISPENSER     |
+|581476   |SMALL CERAMIC TOP STORAGE JAR    |
++---------+---------------------------------+
+
+priceFilter = col("UnitPrice") > 10
+descFilter = instr(dfRetail.Description, "WOODEN" ) >= 1
+
+dfRetail.where(priceFilter | descFilter).show(5)
+
+dfRetail.where(priceFilter & descFilter).show(5)
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------
+######    RDD (Resilient Distributed Datasets)    ######
+
+#1 Interoperating between RDD to DF and DF to RDD
+
+rddRetail = dfRetail.rdd
+
+rddRetail.take(5)
+[Row(InvoiceNo='581475', StockCode='22596', Description='CHRISTMAS STAR WISH LIST CHALKBOARD', Quantity=36, InvoiceDate='2011-12-09 08:39:00', UnitPrice=0.39, CustomerID=13069.0, Country='United Kingdom'), Row(InvoiceNo='581475', StockCode='23235', Description='STORAGE TIN VINTAGE LEAF', Quantity=12, InvoiceDate='2011-12-09 08:39:00', UnitPrice=1.25, CustomerID=13069.0, Country='United Kingdom'), Row(InvoiceNo='581475', StockCode='23272', Description='TREE T-LIGHT HOLDER WILLIE WINKIE', Quantity=12, InvoiceDate='2011-12-09 08:39:00', UnitPrice=0.39, CustomerID=13069.0, Country='United Kingdom'), Row(InvoiceNo='581475', StockCode='23239', Description='SET OF 4 KNICK KNACK TINS POPPIES', Quantity=6, InvoiceDate='2011-12-09 08:39:00', UnitPrice=1.65, CustomerID=13069.0, Country='United Kingdom'), Row(InvoiceNo='581475', StockCode='21705', Description='BAG 500g SWIRLY MARBLES', Quantity=24, InvoiceDate='2011-12-09 08:39:00', UnitPrice=0.39, CustomerID=13069.0, Country='United Kingdom')]
+
+dfR = rddRetail.toDF()
+
+#2 Create RDD from local collection
+
+myColl = """Left Anti join does the exact opposite of the Spark leftsemi join, leftanti join returns only columns from the left DataFrame/Dataset for non-matched records""".split(" ")
+
+words = spark.sparkContext.parallelize(myColl, 2)
+
+#3 From Data Source
+
+rddRetail = spark.sparkContext.textFile('/home/futurense/Downloads/MongoDBFIles/retail-data/by-day/2011-12-09.csv')
+
+rddRetail = spark.sparkContext.textFile('/home/futurense/Downloads/MongoDBFIles/flight-data/parquet/2010-summary-parquet/part-r-00000-1a9822ba-b8fb-4d8e-844a-ea30d0801b9e.gz.parquet')
+
+dfRetail = spark.read.format("parquet").option("inferSchema", "True").option("header","True").load('/home/futurense/Downloads/MongoDBFIles/flight-data/parquet/2010-summary-parquet/part-r-00000-1a9822ba-b8fb-4d8e-844a-ea30d0801b9e.gz.parquet')
+
+def startsWithS(individual):return individual.startswith("S")
+
+words.filter(lambda word:startsWithS(word)).collect()
+
+words.filter(lambda word:word.startswith("S")).collect()
+
+words.map(lambda word:(word,word[0],word.startswith("S"))).collect()
+
+words2 = words.map(lambda word:(word,word[0],word.startswith("S")))
+
+words2.filter(lambda record: record[2]).take(5)
+[('Spark', 'S', True)]
+
+words2.filter(lambda record: record[1]).take(5)
+[('Left', 'L', False), ('Anti', 'A', False), ('join', 'j', False), ('does', 'd', False), ('the', 't', False)]
+
+words3 = words.flatMap(lambda word:list(word))
+
+words.sortBy(lambda word: len(word) * 1).take(10)
+
+words.sortBy(lambda word: len(word)).take(10)
+
+rddRange = spark.sparkContext.parallelize(range(1,21))
+
+rddRange.reduce(lambda x,y: x+ y)
+
+def wordLen(left, right):
+    if len(left) > len(right):
+        return left
+    else:
+        return right
+
+
+words.reduce(wordLen)
+
+confidence = 0.95
+timeoutMillisecond = 100
+
+words.countApprox(timeoutMillisecond, confidence)
+
+words.saveAsTextFile('/home/futurense/Downloads/abc')
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+##### Distrubuted variavles #####
+#####  Broadcast Variables  #####
+
+myColl = """Left Anti join does the exact opposite of the Spark leftsemi join, leftanti join returns only columns from the left DataFrame/Dataset for non-matched records""".split(" ")
+
+words = spark.sparkContext.parallelize(myColl, 2)
+
+suppData = {'Left' : 100, 'Anti': 200, 'join': 20, 'does': 10, 'the': 5, 'exact': 22, 'opposite': 500, 'Spark': 700}
+
+suppBroadcast = spark.sparkContext.broadcast(suppData)
+
+words.map(lambda var: (var, suppBroadcast.value.get(var,0))).sortBy(lambda var1: var1[1]).collect()
+
+#####  Accumilator Variables  #####
+
+accChina = spark.sparkContext.accumulator(0)
+
+dfFlight = spark.read.format("parquet").option("inferSchema", "True").option("header","True").load('/home/futurense/Downloads/MongoDBFIles/flight-data/parquet/2010-summary-parquet/part-r-00000-1a9822ba-b8fb-4d8e-844a-ea30d0801b9e.gz.parquet')
+
+def accChinaCount(flight_row):
+    dest = flight_row["DEST_COUNTRY_NAME"]
+    orig = flight_row["ORIGIN_COUNTRY_NAME"]
+    if dest == "China":
+        accChina.add(flight_row["count"])
+    if orig == "China":
+        accChina.add(flight_row["count"])
+
+
+dfFlight.foreach(lambda flight_row: accChinaCount(flight_row))
+
+accChina.value
+
+df1 = spark.range(2,1000000, 2)
+df2 = spark.range(2,1000000, 4)
+step1 = df1.repartition(5)
+step12 = df2.repartition(6)
+step2 = step1.selectExpr("id * 5 as id")
+step3 = step2.join(step12, ["id"])
+step4 = step3.selectExpr("sum(id)")
+step4.collect()
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------
+pyspark --master local[2]
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+
+lines =  spark.readStream.format('socket').option('host', 'localhost').option('port', 9999).load()
+
+words = lines.select(explode(split(lines.value,' ')).alias('word'))
+
+####### IN OTHER TERMINAL #######
+nc -lk 9999
+####### ################# #######
+
+wordCount = words.groupBy('word').count()
+
+count = 0
+
+def wordCounter(word):
+    if word in words:
+        count += 1
+
+wordCount = words.foreach(lambda word: wordCounter(word))
+
+query = wordCount.writeStream.queryName('newDf').outputMode('complete').format('console').start().awaitTermination()
+
+query = wordCount.writeStream.queryName('newDf').outputMode('append').format('console').start().awaitTermination()
+
+query = wordCount.writeStream.queryName('newDf').outputMode('update').format('console').start().awaitTermination()
+
+query = wordCount.writeStream.queryName('newDf').format('csv').option('path', '/home/futurense/Desktop/').option('checkpointLocation','/home/futurense/').start()
+
+words.writeStream.outputMode('append').format('csv').option('path', '/home/futurense/Desktop/').option('checkpointLocation','/home/futurense/').start().awaitTermination()
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Enable Zookeeper --
+
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+Enable Kafka Broker --
+
+bin/kafka-server-start.sh config/server.properties
+
+Create topic --
+
+bin/kafka-topics.sh --create --topic test-events --partitions 2 --replication-factor 1 --bootstrap-server localhost:9092
+
+Start Producer --
+
+bin/kafka-console-producer.sh --topic test-events --bootstrap-server localhost:9092
+
+bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --property "parse.key = true" --property "key-separator=:" --topic test
+
+Start Consumer --
+
+bin/kafka-console-consumer.sh --topic test-events --from-beginning --bootstrap-server localhost:9092
+
+bin/kafka-console-consumer.sh --topic test-events --from-beginning --group test-group --property print.key=true --property key.separator="=" --bootstrap-server localhost:9092
+
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --all-groups
+
+__consumer_offsets
+test-events
+
+bin/kafka-topics.sh --describe --topic test-events --bootstrap-server localhost:9092
+
+Topic: test-events	TopicId: YLSeVrz3S3uZ6hrKkNZtUQ	PartitionCount: 2	ReplicationFactor: 1	Configs: segment.bytes=1073741824
+	Topic: test-events	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+	Topic: test-events	Partition: 1	Leader: 0	Replicas: 0	Isr: 0
+
+
+bin/kafka-topics.sh --delete --topic test-events --bootstrap-server localhost:9092
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --property "parse.key=true" --property "key-separator=:" --topic test
+
+bin/kafka-console-consumer.sh --topic test --from-beginning --group test-group --property print.key=true --property key.separator="=" --bootstrap-server localhost:9092
+
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Azure Data Bricks 
+
+
+storage_account_name = 'nameofyourstorageaccount'
+storage_account_access_key = 'thekeyfortheblobcontainer'
+spark.conf.set('fs.azure.account.key.' + storage_account_name + '.blob.core.windows.net', storage_account_access_key)
+blob_container = 'yourblobcontainername'
+filePath = "wasbs://" + blob_container + "@" + storage_account_name + ".blob.core.windows.net/Sales/SalesFile.csv"
+salesDf = spark.read.format("csv").load(filePath, inferSchema = True, header = True)
+
+
+
+https://vikasdatalake.blob.core.windows.net/vikasfilesystem/dataFiles/moviesdb.csv
+
+
+dbutils.fs.mount(source = "wasbs://vikasfilesystem@vikasdatalake.blob.core.windows.net",
+mount_point = "/mnt/dataFiles",
+extra_configs = {"fs.azure.account.key.vikasdatalake.blob.core.windows.net" :"+//Ag8UTzQb2GUVQynlwzPMaSl8RrLkGdL/kQ1fq6WFfTP8YzlGIXIerXp41JxeE6XMg3tXKGbBe6AILjcu4SQ=="})
+
+/dbfs/mnt/dataFiles/
+
+df = spark.read.csv("/mnt/dataFiles/dataFiles/moviesdb.csv")
+display(df)
+
+
+%sh
+ls -lrt /dbfs/mnt/dataFiles/dataFiles/
+
+dbutils.fs.ls("/mnt/dataFiles/")
+
